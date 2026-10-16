@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# dlt local state and secrets
+.dlt/secrets.toml
+.dlt/.sources
+_storage/
+
+# DuckDB output
+*.duckdb
+*.duckdb.wal
+
+# Downloaded data
+*.parquet
+*.zip
