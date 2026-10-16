@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: trips_checked
+    description: Every staged trip plus one dq_fail_* flag per check, the failed-check count and the reasons.
+    columns:
+      - name: dq_failed_check_count
+        data_tests: [not_null]
+
+  - name: trips_passed
+    description: Trips that passed every quality check. Feeds the marts.
+    columns:
+      - name: trip_id
+        data_tests: [unique, not_null]
+      - name: pickup_at
+        data_tests: [not_null]
+      - name: dropoff_at
+        data_tests: [not_null]
+      - name: vendor_id
+        data_tests:
+          - relationships:
+              to: ref('vendors')
+              field: vendor_id
+      - name: payment_type_id
+        data_tests:
+          - relationships:
+              to: ref('payment_types')
+              field: payment_type_id
+      - name: pickup_location_id
+        data_tests:
+          - relationships:
+              to: ref('stg_taxi_zone_lookup')
+              field: location_id
+      - name: dropoff_location_id
+        data_tests:
+          - relationships:
+              to: ref('stg_taxi_zone_lookup')
+              field: location_id
+
+  - name: trips_failed
+    description: Quarantined trips that failed at least one check, with the reasons.
+    columns:
+      - name: trip_id
+        data_tests: [not_null]
+      - name: dq_failure_reasons
+        data_tests: [not_null]
+
+  - name: dq_summary
+    description: Failed-trip counts and percentages per check and source file.

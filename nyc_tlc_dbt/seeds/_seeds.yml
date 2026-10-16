@@ -1,0 +1,32 @@
+version: 2
+
+seeds:
+  - name: vendors
+    description: TPEP vendor codes from the TLC Yellow Taxi data dictionary.
+    config:
+      column_types:
+        vendor_id: integer
+        vendor_name: varchar
+    columns:
+      - name: vendor_id
+        data_tests: [unique, not_null]
+
+  - name: payment_types
+    description: Payment type codes from the TLC Yellow Taxi data dictionary.
+    config:
+      column_types:
+        payment_type_id: integer
+        payment_type_name: varchar
+    columns:
+      - name: payment_type_id
+        data_tests: [unique, not_null]
+
+  - name: rate_codes
+    description: Rate code IDs from the TLC Yellow Taxi data dictionary.
+    config:
+      column_types:
+        rate_code_id: integer
+        rate_code_name: varchar
+    columns:
+      - name: rate_code_id
+        data_tests: [unique, not_null]

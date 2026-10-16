@@ -15,3 +15,10 @@ _storage/
 # Downloaded data
 *.parquet
 *.zip
+
+# dbt
+nyc_tlc_dbt/target/
+nyc_tlc_dbt/dbt_packages/
+nyc_tlc_dbt/logs/
+logs/
+.user.yml

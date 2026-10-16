@@ -1,0 +1,44 @@
+version: 2
+
+sources:
+  - name: nyc_tlc
+    description: Raw tables loaded by the dlt pipeline (nyc_tlc_pipeline.py).
+    schema: nyc_tlc_data
+    tables:
+      - name: taxi_zone_lookup
+        columns:
+          - name: location_id
+            data_tests: [unique, not_null]
+
+      - name: taxi_zones
+        description: Zone polygons from the TLC shapefile, as GeoJSON in EPSG:2263.
+
+      - name: yellow_tripdata
+        description: Yellow Taxi trip records, one row per trip, as published by the TLC.
+        columns:
+          - name: tpep_pickup_datetime
+            data_tests: [not_null]
+          - name: tpep_dropoff_datetime
+            data_tests: [not_null]
+          - name: vendor_id
+            data_tests:
+              - accepted_values:
+                  values: [1, 2, 6, 7]
+                  quote: false
+          - name: payment_type
+            data_tests:
+              - accepted_values:
+                  values: [0, 1, 2, 3, 4, 5, 6]
+                  quote: false
+          - name: pu_location_id
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('nyc_tlc', 'taxi_zone_lookup')
+                  field: location_id
+          - name: do_location_id
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('nyc_tlc', 'taxi_zone_lookup')
+                  field: location_id

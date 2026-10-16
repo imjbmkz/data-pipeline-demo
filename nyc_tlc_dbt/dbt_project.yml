@@ -1,0 +1,40 @@
+name: nyc_tlc
+version: "1.0.0"
+config-version: 2
+profile: nyc_tlc
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+clean-targets: ["target", "dbt_packages"]
+
+# Thresholds used by the row-level quality checks in models/quality/trips_checked.sql
+vars:
+  max_trip_distance_miles: 200
+  max_trip_duration_hours: 24
+  max_passenger_count: 9
+
+models:
+  nyc_tlc:
+    staging:
+      +schema: staging
+      +materialized: view
+    quality:
+      +schema: quality
+      +materialized: table
+    marts:
+      +schema: marts
+      +materialized: table
+
+seeds:
+  nyc_tlc:
+    +schema: reference
+
+data_tests:
+  nyc_tlc:
+    # Tests on raw/staged data only warn: bad rows are expected there and are
+    # quarantined into quality.trips_failed instead of stopping the build.
+    staging:
+      +severity: warn

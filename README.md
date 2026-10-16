@@ -45,3 +45,66 @@ dlt normalizes column names to snake_case, so `VendorID` becomes `vendor_id` and
 ## Other destinations
 
 Pass any dlt destination, e.g. `--destination bigquery` or `--destination motherduck`, and put its credentials in `.dlt/secrets.toml`.
+
+## Transform it with dbt
+
+The `nyc_tlc_dbt/` project reads the tables dlt loaded into `nyc_tlc.duckdb` and builds four layers, each in its own schema:
+
+| Schema | Models | Purpose |
+|---|---|---|
+| `staging` | `stg_yellow_tripdata`, `stg_taxi_zone_lookup`, `stg_taxi_zones` | Clean names and types; adds a hashed `trip_id` (views) |
+| `quality` | `trips_checked`, `trips_passed`, `trips_failed`, `dq_summary` | Row-level quality checks and the passed/failed split |
+| `marts` | `fct_trips`, `dim_zone`, `dim_date`, `dim_vendor`, `dim_payment_type`, `dim_rate_code` | Star schema built from passed trips only |
+| `reference` | `vendors`, `payment_types`, `rate_codes` (seeds) | Code lists from the TLC data dictionary |
+
+Run it after the dlt pipeline has loaded data. Close any open DuckDB session on the file first, because DuckDB allows only one writer:
+
+```bash
+cd nyc_tlc_dbt
+dbt build --profiles-dir .
+```
+
+`dbt build` loads the seeds, builds the models and runs the tests in dependency order. Set `NYC_TLC_DUCKDB_PATH` if your DuckDB file lives somewhere other than the repo root.
+
+### Data quality
+
+Quality is checked in two ways:
+
+1. **Row-level checks** in `quality.trips_checked`. Each trip gets one `dq_fail_*` flag per check. Trips with no failures go to `trips_passed`; the rest go to `trips_failed`, with `dq_failure_reasons` listing every check they failed.
+
+   | Check | A trip fails when |
+   |---|---|
+   | `duplicate_trip` | It is an exact copy of an earlier record (the first copy passes) |
+   | `missing_timestamp` | Pickup or dropoff time is missing |
+   | `pickup_outside_file_month` | Pickup is outside the month of its source file |
+   | `non_positive_duration` | Dropoff is at or before pickup |
+   | `excessive_duration` | Trip lasts more than 24 hours |
+   | `invalid_trip_distance` | Distance is negative or over 200 miles |
+   | `negative_amount` | Fare or total is negative |
+   | `invalid_passenger_count` | Passenger count is 0 or over 9 (missing is allowed) |
+   | `unknown_vendor` / `unknown_payment_type` / `unknown_rate_code` | Code is not in the data dictionary (a missing rate code is allowed) |
+   | `unknown_pickup_zone` / `unknown_dropoff_zone` | Zone ID is missing or not in the zone lookup |
+
+   The thresholds are `vars` in `dbt_project.yml`. `quality.dq_summary` shows how many trips failed each check per month.
+
+2. **dbt tests** (`not_null`, `unique`, `accepted_values`, `relationships`, plus two singular tests in `tests/`):
+   - Tests on raw and staging data only **warn**, since bad rows are expected there and are quarantined rather than stopping the build.
+   - Tests on `trips_passed` and the marts **error**, because those tables should be clean.
+   - `assert_every_trip_is_passed_or_failed` checks that no trip is lost or counted twice in the split.
+
+### Example queries
+
+```sql
+-- Why did trips fail?
+SELECT * FROM quality.dq_summary;
+
+-- Trips and revenue by pickup borough and weekday
+SELECT z.borough, d.day_name, COUNT(*) AS trips, SUM(f.total_amount) AS revenue
+FROM marts.fct_trips f
+JOIN marts.dim_zone z ON f.pickup_location_id = z.location_id
+JOIN marts.dim_date d ON f.pickup_date_key = d.date_key
+GROUP BY ALL
+ORDER BY z.borough, MIN(d.day_of_week);
+```
+
+`stg_yellow_tripdata` expects the `cbd_congestion_fee` column, which the TLC added in January 2025. If you load data from before 2025, remove that column from the staging model and `fct_trips`.

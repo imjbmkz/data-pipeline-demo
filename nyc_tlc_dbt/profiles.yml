@@ -1,0 +1,12 @@
+nyc_tlc:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # The DuckDB file written by nyc_tlc_pipeline.py (repo root)
+      path: "{{ env_var('NYC_TLC_DUCKDB_PATH', '../nyc_tlc.duckdb') }}"
+      schema: main
+      threads: 4
+      settings:
+        # Keep timestamp-to-date conversions in UTC, whatever the machine's time zone
+        TimeZone: UTC

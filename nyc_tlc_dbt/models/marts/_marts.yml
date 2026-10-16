@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: dim_zone
+    description: Taxi zones (role-played as pickup and dropoff zone in fct_trips).
+    columns:
+      - name: location_id
+        data_tests: [unique, not_null]
+
+  - name: dim_vendor
+    columns:
+      - name: vendor_id
+        data_tests: [unique, not_null]
+
+  - name: dim_payment_type
+    columns:
+      - name: payment_type_id
+        data_tests: [unique, not_null]
+
+  - name: dim_rate_code
+    columns:
+      - name: rate_code_id
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: fct_trips
+    description: One row per trip that passed every quality check.
+    columns:
+      - name: trip_id
+        data_tests: [unique, not_null]
+      - name: pickup_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: dropoff_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: vendor_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_vendor')
+              field: vendor_id
+      - name: rate_code_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_rate_code')
+              field: rate_code_id
+      - name: payment_type_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_payment_type')
+              field: payment_type_id
+      - name: pickup_location_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_zone')
+              field: location_id
+      - name: dropoff_location_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_zone')
+              field: location_id
