@@ -10,6 +10,8 @@ A simple [dlt](https://dlthub.com) pipeline that loads NYC TLC data into DuckDB:
 
 All three tables use `replace`, so re-running the pipeline never duplicates rows.
 
+**Want to practise?** See [ACTIVITY.md](ACTIVITY.md) for a hands-on exercise that extends this pipeline.
+
 ## Run it
 
 Use **Python 3.10–3.13**. dbt doesn't support newer Python yet, and pip would otherwise backtrack to ancient dbt releases that fail to build (`dbt-core-experimental-parser`).
