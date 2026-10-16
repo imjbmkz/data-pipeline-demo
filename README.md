@@ -56,7 +56,7 @@ The `nyc_tlc_dbt/` project reads the tables dlt loaded into `nyc_tlc.duckdb` and
 |---|---|---|
 | `staging` | `stg_yellow_tripdata`, `stg_taxi_zone_lookup`, `stg_taxi_zones` | Clean names and types; adds a hashed `trip_id` (views) |
 | `quality` | `trips_checked`, `trips_passed`, `trips_failed`, `dq_summary` | Row-level quality checks and the passed/failed split |
-| `marts` | `fct_trips`, `dim_zone`, `dim_date`, `dim_vendor`, `dim_payment_type`, `dim_rate_code` | Star schema built from passed trips only |
+| `marts` | `fct_trips`, `dim_zone`, `dim_date`, `dim_vendor`, `dim_payment_type`, `dim_rate_code`, `daily_trip_summary` | Star schema built from passed trips only, plus a daily summary |
 | `reference` | `vendors`, `payment_types`, `rate_codes` (seeds) | Code lists from the TLC data dictionary |
 
 Run it after the dlt pipeline has loaded data. Close any open DuckDB session on the file first, because DuckDB allows only one writer:
@@ -97,6 +97,11 @@ Quality is checked in two ways:
 ### Example queries
 
 ```sql
+-- Daily trip summary (one row per pickup day)
+SELECT date_day, day_name, total_trips, avg_duration_minutes, total_revenue, card_tip_pct_of_fare
+FROM marts.daily_trip_summary
+ORDER BY date_day;
+
 -- Why did trips fail?
 SELECT * FROM quality.dq_summary;
 
