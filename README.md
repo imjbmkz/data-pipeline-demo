@@ -12,6 +12,8 @@ All three tables use `replace`, so re-running the pipeline never duplicates rows
 
 ## Run it
 
+Use **Python 3.10–3.13**. dbt doesn't support newer Python yet, and pip would otherwise backtrack to ancient dbt releases that fail to build (`dbt-core-experimental-parser`).
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
