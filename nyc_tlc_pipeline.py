@@ -141,7 +141,7 @@ def main() -> None:
     parser.add_argument("--year", type=int, default=DEFAULT_YEAR)
     parser.add_argument("--months", type=int, nargs="+", default=list(DEFAULT_MONTHS))
     parser.add_argument("--destination", default="duckdb", help="Any dlt destination name")
-    parser.add_argument("--dataset", default="nyc_tlc")
+    parser.add_argument("--dataset", default="nyc_tlc_data")
     args = parser.parse_args()
 
     if any(m < 1 or m > 12 for m in args.months):
